@@ -1,3 +1,5 @@
+# portal-escuela-normal
+proyecto escolar completo
 # Portal Académico — Escuela Normal
 
 Aplicación web con login real, roles (alumno, padre/tutor, administrador), base de datos MySQL y API REST.
