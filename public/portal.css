@@ -1,0 +1,11 @@
+/* Estilos adicionales del portal (style.css original permanece sin cambios) */
+.nav-link-custom { color: #94a3b8; transition: all .2s ease; font-weight: 500; }
+.nav-link-custom:hover, .nav-link-custom.active { background-color: #2563eb; color: #fff !important; }
+
+.tabla-horarios th, .tabla-horarios td { vertical-align: middle; }
+.tabla-horarios small { display: block; font-size: .75rem; margin-top: 2px; }
+.resumen-card { border-radius: 1rem; }
+@media print {
+  aside, header, footer, .d-print-none { display: none !important; }
+  
+}

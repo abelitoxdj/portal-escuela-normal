@@ -1,0 +1,60 @@
+<!doctype html>
+<html data-bs-theme="light" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="Ingreso al Portal Acad&eacute;mico de la Escuela Normal." name="description" />
+    <title>Ingresar - Portal Acad&eacute;mico Escuela Normal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <link href="portal.css" rel="stylesheet" />
+    <style>
+      .login-fondo { background: linear-gradient(rgba(15,23,42,.78), rgba(15,23,42,.78)), url("/img/normal2.png") center/cover no-repeat; }
+    </style>
+  </head>
+  <body class="login-fondo min-vh-100 d-flex align-items-center justify-content-center p-3">
+    <main class="card border-0 shadow-lg rounded-4 p-4 p-md-5 w-100" style="max-width: 440px">
+      <div class="text-center mb-4">
+        <img alt="Escudo de la Escuela Normal" class="mb-3" height="96" src="/img/logon.png" width="96" />
+        <h1 class="h4 fw-bold mb-1">Escuela Normal</h1>
+        <p class="text-body-secondary small mb-0">Portal Acad&eacute;mico &middot; Alumnos y Padres</p>
+      </div>
+      <form id="form-login" novalidate>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" for="email">Correo electr&oacute;nico</label>
+          <input autocomplete="username" class="form-control rounded-3" id="email" maxlength="120" required type="email" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold" for="password">Contrase&ntilde;a</label>
+          <div class="input-group">
+            <input autocomplete="current-password" class="form-control rounded-start-3" id="password" maxlength="72" required type="password" />
+            <button aria-label="Mostrar u ocultar contrase&ntilde;a" class="btn btn-outline-secondary" id="btn-ver" type="button"><i class="fa-solid fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="alert alert-danger py-2 small d-none" id="login-error" role="alert"></div>
+        <button class="btn btn-primary w-100 rounded-pill py-2 fw-semibold" id="btn-login" type="submit">Ingresar</button>
+        <div class="text-center mt-3"><a href="#" id="link-recuperar" class="small">&iquest;Olvidaste tu contrase&ntilde;a?</a></div>
+      </form>
+
+      <form class="d-none" id="form-recuperar" novalidate>
+        <h2 class="h6 fw-bold">Recuperar contrase&ntilde;a</h2>
+        <p class="small text-body-secondary">Ingres&aacute; tu correo. Si est&aacute; registrado, recibir&aacute;s instrucciones.</p>
+        <input autocomplete="email" class="form-control rounded-3 mb-3" id="rec-email" maxlength="120" required type="email" placeholder="Correo electr&oacute;nico" />
+        <div class="alert d-none py-2 small" id="rec-msg" role="status"></div>
+        <button class="btn btn-primary w-100 rounded-pill mb-2" type="submit">Enviar</button>
+        <a href="#" class="small d-block text-center" id="rec-tengo-token">Ya tengo un c&oacute;digo</a>
+        <a href="#" class="small d-block text-center mt-1" id="rec-volver">Volver</a>
+      </form>
+
+      <form class="d-none" id="form-restablecer" novalidate>
+        <h2 class="h6 fw-bold">Nueva contrase&ntilde;a</h2>
+        <input autocomplete="off" class="form-control rounded-3 mb-2" id="res-token" required type="text" placeholder="C&oacute;digo recibido" />
+        <input autocomplete="new-password" class="form-control rounded-3 mb-3" id="res-pass" required type="password" maxlength="72" placeholder="Nueva contrase&ntilde;a (8+, letras y n&uacute;meros)" />
+        <div class="alert d-none py-2 small" id="res-msg" role="status"></div>
+        <button class="btn btn-primary w-100 rounded-pill mb-2" type="submit">Guardar</button>
+        <a href="#" class="small d-block text-center" id="res-volver">Volver</a>
+      </form>
+    </main>
+    <script src="login.js"></script>
+  </body>
+</html>
