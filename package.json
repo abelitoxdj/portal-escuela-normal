@@ -1,13 +1,14 @@
 {
   "name": "portal-academico-escuela-normal",
   "version": "1.0.0",
-  "description": "Portal Académico - Escuela Normal",
+  "description": "Portal Acad\u00e9mico - Escuela Normal",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
     "db:seed-demo": "node db/seed-demo.js",
     "admin:crear": "node server/crear-admin.js",
-    "test": "node tests/run-tests.js && node tests/frontend-dom.js"
+    "test": "node tests/run-tests.js && node tests/frontend-dom.js",
+    "test:demo": "node tests/verificar-demostracion.js"
   },
   "license": "ISC",
   "dependencies": {

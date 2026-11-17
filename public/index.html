@@ -12,6 +12,7 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <link href="/img/logon.png" rel="icon" type="image/png" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
     <link href="style.css" rel="stylesheet" />
     <link href="portal.css" rel="stylesheet" />
@@ -400,12 +401,12 @@
                     >
                       Contrase&ntilde;a actual
                     </label>
-                    <input
+                    <div class="input-group"><input
                       class="form-control rounded-3"
                       placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
                       required=""
                       id="pw-actual" type="password"
-                    />
+                    /><button aria-label="Mostrar u ocultar contrase&ntilde;a" class="btn btn-outline-secondary btn-ver-clave" type="button"><i class="fa-solid fa-eye"></i></button></div>
                   </div>
                   <div class="mb-3">
                     <label
@@ -413,12 +414,12 @@
                     >
                       Nueva contrase&ntilde;a
                     </label>
-                    <input
+                    <div class="input-group"><input
                       class="form-control rounded-3"
                       placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
                       required=""
                       id="pw-nueva" type="password"
-                    />
+                    /><button aria-label="Mostrar u ocultar contrase&ntilde;a" class="btn btn-outline-secondary btn-ver-clave" type="button"><i class="fa-solid fa-eye"></i></button></div>
                   </div>
                   <div class="mb-1">
                     <label
@@ -426,12 +427,12 @@
                     >
                       Repetir nueva contrase&ntilde;a
                     </label>
-                    <input
+                    <div class="input-group"><input
                       class="form-control rounded-3"
                       placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
                       required=""
                       id="pw-repetir" type="password"
-                    />
+                    /><button aria-label="Mostrar u ocultar contrase&ntilde;a" class="btn btn-outline-secondary btn-ver-clave" type="button"><i class="fa-solid fa-eye"></i></button></div>
                   </div>
                 <div class="text-danger small mt-2" id="pw-error" role="alert"></div></form>
               </div>
@@ -814,8 +815,10 @@
                     <div class="col-6"><input class="form-control" id="au-apellido" maxlength="80" placeholder="Apellido" required /></div>
                     <div class="col-12"><input class="form-control" id="au-email" maxlength="120" placeholder="Correo" required type="email" /></div>
                     <div class="col-6"><select class="form-select" id="au-rol"><option value="alumno">Alumno</option><option value="tutor">Padre / tutor</option><option value="admin">Administrador</option></select></div>
-                    <div class="col-6"><input class="form-control" id="au-pass" autocomplete="new-password" placeholder="Contrase&ntilde;a inicial" required type="password" /></div>
+                    <div class="col-6"><div class="input-group"><input class="form-control" id="au-pass" autocomplete="new-password" placeholder="Contrase&ntilde;a inicial" required type="password" /><button aria-label="Mostrar u ocultar contrase&ntilde;a" class="btn btn-outline-secondary btn-ver-clave" type="button"><i class="fa-solid fa-eye"></i></button></div></div>
                     <div class="col-6" id="au-anio-box"><input class="form-control" id="au-anio" max="6" min="1" placeholder="A&ntilde;o de cursada" type="number" /></div>
+                    <div class="col-6" id="au-dni-box"><input class="form-control" id="au-dni" inputmode="numeric" maxlength="9" placeholder="DNI (sin puntos)" /></div>
+                    <div class="col-6" id="au-nac-box"><input aria-label="Fecha de nacimiento" class="form-control" id="au-nac" type="date" title="Fecha de nacimiento" /></div>
                     <div class="col-6 d-none" id="au-alumnos-box"><select class="form-select" id="au-alumnos" multiple title="Alumnos asociados"></select></div>
                     <div class="col-12"><button class="btn btn-primary rounded-pill px-4" type="submit">Crear</button> <span class="small ms-2" id="au-msg" role="status"></span></div>
                   </form></div></div>
@@ -872,10 +875,43 @@
                   <form class="row g-2" id="form-admin-periodo"><div class="col-4"><input class="form-control" id="apd-ciclo" placeholder="Ciclo (a&ntilde;o)" type="number" required min="2000" /></div><div class="col-8"><input class="form-control" id="apd-nombre" placeholder="Nombre (ej. 1&deg; Trimestre)" type="text" required maxlength="30" /></div><div class="col-4"><input class="form-control" id="apd-orden" placeholder="Orden" type="number" required min="1" /></div><div class="col-4"><input class="form-control" id="apd-ini" placeholder="Inicio" type="date" required /></div><div class="col-4"><input class="form-control" id="apd-fin" placeholder="Fin" type="date" required /></div>
                     <div class="col-12"><button class="btn btn-primary rounded-pill px-4" type="submit">Guardar</button> <span class="small ms-2" id="apd-msg" role="status"></span></div>
                   </form></div></div>
+                <div class="col-12 col-xl-6"><div class="card bg-body border-0 shadow-sm rounded-4 p-4 h-100">
+                  <h2 class="h6 fw-bold mb-3">Datos del alumno</h2>
+                  <select aria-label="Alumno" class="form-select mb-3" id="ada-alumno"></select>
+                  <form class="row g-2 d-none" id="form-admin-alumno">
+                    <div class="col-6"><label class="form-label small mb-0" for="ada-dni">DNI</label><input class="form-control" id="ada-dni" inputmode="numeric" maxlength="9" /></div>
+                    <div class="col-6"><label class="form-label small mb-0" for="ada-nac">Fecha de nacimiento</label><input class="form-control" id="ada-nac" type="date" /></div>
+                    <div class="col-4"><label class="form-label small mb-0" for="ada-anio">A&ntilde;o de cursada</label><input class="form-control" id="ada-anio" max="6" min="1" required type="number" /></div>
+                    <div class="col-4"><label class="form-label small mb-0" for="ada-div">Divisi&oacute;n</label><input class="form-control" id="ada-div" maxlength="5" /></div>
+                    <div class="col-4"><label class="form-label small mb-0" for="ada-ing">A&ntilde;o de ingreso</label><input class="form-control" id="ada-ing" max="2100" min="1990" type="number" /></div>
+                    <div class="col-12"><label class="form-label small mb-0" for="ada-tel">Tel&eacute;fono</label><input class="form-control" id="ada-tel" maxlength="30" /></div>
+                    <div class="col-8"><label class="form-label small mb-0" for="ada-dom">Domicilio</label><input class="form-control" id="ada-dom" maxlength="150" /></div>
+                    <div class="col-4"><label class="form-label small mb-0" for="ada-loc">Localidad</label><input class="form-control" id="ada-loc" maxlength="80" /></div>
+                    <div class="col-12"><div class="small fw-semibold mt-2">Materias en las que cursa</div><div class="d-flex flex-wrap gap-3 mt-1" id="ada-materias"></div></div>
+                    <div class="col-12"><button class="btn btn-primary rounded-pill px-4" type="submit">Guardar datos</button> <span class="small ms-2" id="ada-msg" role="status"></span></div>
+                  </form></div></div>
+                <div class="col-12"><div class="card bg-body border-0 shadow-sm rounded-4 p-4">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h6 fw-bold mb-0">Historial de notas cargadas</h2>
+                    <select aria-label="Filtrar por alumno" class="form-select form-select-sm" id="an2-filtro" style="max-width: 240px"></select>
+                  </div>
+                  <div class="table-responsive" style="max-height: 360px"><table class="table table-sm align-middle small mb-0">
+                    <thead class="table-light"><tr><th>Alumno</th><th>Materia</th><th>Per&iacute;odo</th><th style="width:110px">Nota</th><th></th></tr></thead>
+                    <tbody id="admin-notas"></tbody></table></div>
+                  <div class="small mt-2" id="an2-msg" role="status"></div></div></div>
+                <div class="col-12"><div class="card bg-body border-0 shadow-sm rounded-4 p-4">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h6 fw-bold mb-0">Gesti&oacute;n de registros (editar / borrar)</h2>
+                    <select aria-label="Tipo de registro" class="form-select form-select-sm" id="ag-tipo" style="max-width: 240px">
+                      <option value="comunicados">Comunicados</option><option value="pagos">Cuotas</option><option value="asistencias">Asistencias</option>
+                      <option value="materias">Materias</option><option value="horarios">Horarios</option><option value="docentes">Docentes</option></select>
+                  </div>
+                  <div class="table-responsive" style="max-height: 360px"><table class="table table-sm align-middle small mb-0"><thead class="table-light" id="ag-thead"></thead><tbody id="ag-tbody"></tbody></table></div>
+                  <div class="small mt-2" id="ag-msg" role="status"></div></div></div>
                 <div class="col-12"><div class="card bg-body border-0 shadow-sm rounded-4 p-4">
                   <h2 class="h6 fw-bold mb-3">Usuarios</h2>
                   <div class="table-responsive"><table class="table table-sm align-middle small mb-0">
-                    <thead class="table-light"><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th></tr></thead>
+                    <thead class="table-light"><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Acciones</th></tr></thead>
                     <tbody id="admin-usuarios"></tbody></table></div></div></div>
               </div>
             </section>
@@ -918,6 +954,19 @@
       </div>
     </footer>
     <!-- Bootstrap 5.3 JS Bundle -->
+    <div aria-hidden="true" class="modal fade" id="modalResetClave" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-header border-0"><h5 class="modal-title fw-bold">Restablecer contrase&ntilde;a</h5><button aria-label="Cerrar" class="btn-close" data-bs-dismiss="modal" type="button"></button></div>
+        <form id="form-reset-clave"><div class="modal-body">
+          <p class="small text-body-secondary" id="rc-usuario"></p>
+          <label class="form-label small fw-semibold" for="rc-pass">Nueva contrase&ntilde;a</label>
+          <div class="input-group mb-2"><input autocomplete="new-password" class="form-control" id="rc-pass" maxlength="72" required type="password" /><button aria-label="Mostrar u ocultar contrase&ntilde;a" class="btn btn-outline-secondary btn-ver-clave" type="button"><i class="fa-solid fa-eye"></i></button></div>
+          <div class="form-check"><input class="form-check-input" id="rc-forzar" type="checkbox" /><label class="form-check-label small" for="rc-forzar">Pedir que la cambie al ingresar</label></div>
+          <div class="text-danger small mt-2" id="rc-error" role="alert"></div>
+        </div><div class="modal-footer border-0"><button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal" type="button">Cancelar</button><button class="btn btn-primary rounded-pill px-4" type="submit">Guardar</button></div></form>
+      </div></div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
   </body>

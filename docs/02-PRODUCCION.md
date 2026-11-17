@@ -27,6 +27,10 @@ Apuntar el registro DNS A del dominio a la IP del servidor.
 ## 4. Base de datos
 Cargar `db/schema.sql`, crear el usuario con permisos limitados (ver README) y el primer administrador con `npm run admin:crear`. La base no puede ser accesible desde internet (firewall: solo 80/443 abiertos).
 
+## 4 bis. Migraciones de esquema
+Las bases ya creadas necesitan aplicar, **una sola vez y en orden**, los scripts de `db/migrations/`. Aplicalos **antes** de publicar el código nuevo:
+- `001-datos-alumno.sql`: agrega domicilio y localidad al alumno.
+
 ## 5. Copias de seguridad
 `db/backup.sh` genera un volcado comprimido y borra los de más de 30 días. Programar con cron:
 ```

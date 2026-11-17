@@ -12,7 +12,9 @@ const MAX_INTENTOS = 5;
 const BLOQUEO_MIN = 15;
 
 const limitadorLogin = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false,
+  // Cuenta solo los intentos FALLIDOS: en una escuela muchos alumnos comparten IP (Wi-Fi) y los ingresos correctos no deben bloquear a nadie.
+  // La protección contra adivinar claves de una cuenta la da el bloqueo por usuario (5 intentos).
+  windowMs: 15 * 60 * 1000, max: 100, skipSuccessfulRequests: true, standardHeaders: true, legacyHeaders: false,
   message: { error: 'Demasiados intentos. Probá de nuevo más tarde.' }
 });
 

@@ -59,6 +59,8 @@ CREATE TABLE alumnos (
   anio_cursada TINYINT UNSIGNED NOT NULL,
   division VARCHAR(5) NULL,
   anio_ingreso SMALLINT UNSIGNED NULL,
+  domicilio VARCHAR(150) NULL,
+  localidad VARCHAR(80) NULL,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 

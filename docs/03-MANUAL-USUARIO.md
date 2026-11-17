@@ -16,5 +16,10 @@ Un alumno **no puede** modificar notas, asistencias ni pagos.
 Igual que el alumno, pero con un selector en la barra superior para elegir entre los alumnos asociados a su cuenta. No ve alumnos no asociados.
 
 ## Administrador
-Menú **Administración**: crear usuarios (alumno: se inscribe en las materias de su año; tutor: se asocia a alumnos), activar/desactivar cuentas, cargar notas (el alumno recibe una notificación), registrar asistencias, registrar cuotas y marcarlas como pagadas, administrar el calendario, dar de alta docentes, materias, horarios y períodos, y publicar comunicados (llegan como notificación a todos los usuarios activos).
+Menú **Administración**:
+- **Usuarios:** crear usuarios (alumno con DNI y fecha de nacimiento; tutor asociado a alumnos), activar/desactivar y **Nueva clave** (restablece la contraseña de cualquier usuario y cierra sus sesiones abiertas; opcionalmente le pide cambiarla al ingresar).
+- **Datos del alumno:** DNI, fecha de nacimiento, año, división, año de ingreso, teléfono, domicilio, localidad y **materias en las que cursa**. Si al cargar una nota el desplegable de materias aparece vacío, es porque el alumno no está inscripto en ninguna: se resuelve acá.
+- **Notas:** cargar nota (el alumno recibe una notificación) e **Historial de notas cargadas** con filtro por alumno, edición del valor y borrado.
+- **Gestión de registros (editar / borrar):** comunicados y materias se pueden editar (se cargan en su formulario) y borrar; cuotas, asistencias, horarios y docentes se pueden borrar. Borrar una materia borra también sus notas, horarios e inscripciones.
+- También: registrar asistencias, cuotas (y marcarlas como pagadas), calendario, docentes, materias, horarios, períodos y publicar comunicados.
 Orden recomendado para empezar: períodos → docentes → materias → horarios → alumnos y tutores → notas, asistencias y cuotas.

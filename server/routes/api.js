@@ -51,7 +51,8 @@ router.get('/alumnos', async (req, res) => {
 
 router.get('/perfil-alumno', resolverAlumno, async (req, res) => {
   const [r] = await db.query(
-    `SELECT a.id, u.nombre, u.apellido, a.anio_cursada, a.division, a.anio_ingreso,
+    `SELECT a.id, u.nombre, u.apellido, u.telefono, a.dni, a.fecha_nacimiento, a.domicilio, a.localidad,
+            a.anio_cursada, a.division, a.anio_ingreso,
             TIMESTAMPDIFF(YEAR, a.fecha_nacimiento, CURDATE()) AS edad
      FROM alumnos a JOIN usuarios u ON u.id = a.usuario_id WHERE a.id = ?`, [req.alumnoId]);
   res.json(r[0]);

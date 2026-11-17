@@ -139,7 +139,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             ul.innerHTML = fila('Nombre Completo', esc(`${p.nombre} ${p.apellido}`)) +
                 (p.edad != null ? fila('Edad', `${esc(p.edad)} años`) : '') +
                 fila('Año', `<span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill">${esc(p.anio_cursada)}° Año${p.division ? ' ' + esc(p.division) : ''}</span>`) +
-                (p.anio_ingreso ? fila('Año de Ingreso', esc(p.anio_ingreso)) : '');
+                (p.anio_ingreso ? fila('Año de Ingreso', esc(p.anio_ingreso)) : '') +
+                (p.dni ? fila('DNI', esc(p.dni)) : '') +
+                (p.fecha_nacimiento ? fila('Fecha de nacimiento', fechaLocal(p.fecha_nacimiento)) : '') +
+                (p.telefono ? fila('Teléfono', esc(p.telefono)) : '') +
+                (p.domicilio || p.localidad ? fila('Domicilio', esc([p.domicilio, p.localidad].filter(Boolean).join(', '))) : '');
         } catch (e) { ul.innerHTML = '<li class="text-body-secondary">No hay un alumno asociado a esta cuenta.</li>'; }
     }
 
@@ -351,26 +355,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ---------- Administración ----------
     async function cargarAdmin() {
         const [us, als] = await Promise.all([api('/api/admin/usuarios'), api('/api/alumnos')]);
-        $('admin-usuarios').innerHTML = us.map(u => `<tr><td>${esc(u.nombre)} ${esc(u.apellido)}</td><td>${esc(u.email)}</td><td>${esc(u.rol)}</td><td><button class="btn btn-sm btn-outline-${u.activo ? 'danger' : 'success'} btn-activo" data-id="${Number(u.id)}" data-activo="${u.activo ? 0 : 1}" type="button">${u.activo ? 'Desactivar' : 'Activar'}</button></td></tr>`).join('');
+        $('admin-usuarios').innerHTML = us.map(u => `<tr><td>${esc(u.nombre)} ${esc(u.apellido)}</td><td>${esc(u.email)}</td><td>${esc(u.rol)}</td><td class="text-nowrap"><button class="btn btn-sm btn-outline-primary btn-reset" data-id="${Number(u.id)}" data-nombre="${esc(u.nombre + ' ' + u.apellido)}" type="button">Nueva clave</button> <button class="btn btn-sm btn-outline-${u.activo ? 'danger' : 'success'} btn-activo" data-id="${Number(u.id)}" data-activo="${u.activo ? 0 : 1}" type="button">${u.activo ? 'Desactivar' : 'Activar'}</button></td></tr>`).join('');
         const opts = als.map(a => `<option value="${Number(a.id)}">${esc(a.apellido)}, ${esc(a.nombre)}</option>`).join('');
         $('an-alumno').innerHTML = opts; $('au-alumnos').innerHTML = opts;
         await cargarOpcionesNota();
+        cargarPanelesAdmin();
     }
     async function cargarOpcionesNota() {
         const id = $('an-alumno').value;
         if (!id) return;
         const [ms, nt] = await Promise.all([api(`/api/materias?alumno=${id}`), api(`/api/notas?alumno=${id}`)]);
-        $('an-materia').innerHTML = ms.map(m => `<option value="${Number(m.id)}">${esc(m.nombre)}</option>`).join('');
-        $('an-periodo').innerHTML = nt.periodos.map(p => `<option value="${Number(p.id)}">${esc(p.nombre)}</option>`).join('');
+        $('an-materia').innerHTML = ms.length ? ms.map(m => `<option value="${Number(m.id)}">${esc(m.nombre)}</option>`).join('')
+            : '<option value="">Sin materias: inscribí al alumno en "Datos del alumno"</option>';
+        $('an-periodo').innerHTML = nt.periodos.length ? nt.periodos.map(p => `<option value="${Number(p.id)}">${esc(p.nombre)}</option>`).join('')
+            : '<option value="">Sin períodos: creá uno en "Período (trimestre)"</option>';
     }
     $('an-alumno')?.addEventListener('change', cargarOpcionesNota);
     $('au-rol')?.addEventListener('change', () => {
         const r = $('au-rol').value;
         $('au-anio-box').classList.toggle('d-none', r !== 'alumno');
+        $('au-dni-box').classList.toggle('d-none', r !== 'alumno');
+        $('au-nac-box').classList.toggle('d-none', r !== 'alumno');
         $('au-alumnos-box').classList.toggle('d-none', r !== 'tutor');
     });
     const msg = (id, t, ok) => { const el = $(id); el.textContent = t; el.className = 'small ' + (ok ? 'text-success' : 'text-danger'); };
+    let resetId = null;
     $('admin-usuarios')?.addEventListener('click', async e => {
+        const r = e.target.closest('.btn-reset');
+        if (r) {
+            resetId = Number(r.dataset.id);
+            $('rc-usuario').textContent = `Usuario: ${r.dataset.nombre}`;
+            $('rc-error').textContent = ''; $('form-reset-clave').reset();
+            modal('modalResetClave').show();
+            return;
+        }
         const b = e.target.closest('.btn-activo');
         if (!b) return;
         try { await api(`/api/admin/usuarios/${b.dataset.id}/activo`, { method: 'PATCH', body: { activo: b.dataset.activo === '1' } }); cargarAdmin(); }
@@ -381,7 +399,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             await api('/api/admin/usuarios', { method: 'POST', body: {
                 nombre: $('au-nombre').value, apellido: $('au-apellido').value, email: $('au-email').value, rol: $('au-rol').value,
-                password: $('au-pass').value, anio_cursada: $('au-anio').value,
+                password: $('au-pass').value, anio_cursada: $('au-anio').value, dni: $('au-dni').value, fecha_nacimiento: $('au-nac').value,
                 alumno_ids: [...$('au-alumnos').selectedOptions].map(o => Number(o.value)) } });
             msg('au-msg', 'Usuario creado (deberá cambiar su contraseña al ingresar).', true);
             $('form-admin-usuario').reset(); cargarAdmin();
@@ -391,14 +409,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         try {
             await api('/api/admin/notas', { method: 'POST', body: { alumno_id: $('an-alumno').value, materia_id: $('an-materia').value, periodo_id: $('an-periodo').value, valor: $('an-valor').value } });
-            msg('an-msg', 'Nota guardada.', true); $('an-valor').value = '';
+            msg('an-msg', 'Nota guardada.', true); $('an-valor').value = ''; cargarHistorialNotas();
         } catch (x) { msg('an-msg', x.message, false); }
     });
     $('form-admin-comunicado')?.addEventListener('submit', async e => {
         e.preventDefault();
         try {
-            await api('/api/admin/comunicados', { method: 'POST', body: { titulo: $('ac-titulo').value, cuerpo: $('ac-cuerpo').value, importante: $('ac-importante').checked } });
-            msg('ac-msg', 'Comunicado publicado.', true); $('form-admin-comunicado').reset(); cargarComunicados();
+            const cuerpoC = { titulo: $('ac-titulo').value, cuerpo: $('ac-cuerpo').value, importante: $('ac-importante').checked };
+            if (editComunicadoId) await api(`/api/admin/comunicados/${editComunicadoId}`, { method: 'PUT', body: cuerpoC });
+            else await api('/api/admin/comunicados', { method: 'POST', body: cuerpoC });
+            msg('ac-msg', editComunicadoId ? 'Comunicado actualizado.' : 'Comunicado publicado.', true); editComunicadoId = null; $('form-admin-comunicado').reset(); cargarComunicados(); cargarGestion();
         } catch (x) { msg('ac-msg', x.message, false); }
     });
 
@@ -422,14 +442,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             try {
                 await api(url, { method: 'POST', body: cuerpo() });
                 msg(msgId, 'Guardado.', true); $(formId).reset();
-                await cargarAdminDatos(); if (despues) despues();
+                await cargarAdminDatos(); cargarGestion(); if (despues) despues();
             } catch (x) { msg(msgId, x.message, false); }
         });
     }
     formAdmin('form-admin-asistencia', '/api/admin/asistencias', () => ({ alumno_id: $('aa-alumno').value, materia_id: $('aa-materia').value || null, fecha: $('aa-fecha').value, estado: $('aa-estado').value, justificada: $('aa-just').checked, motivo: $('aa-motivo').value }), 'aa-msg');
     formAdmin('form-admin-pago', '/api/admin/pagos', () => ({ alumno_id: $('ap-alumno').value, concepto: $('ap-concepto').value, monto: $('ap-monto').value, vencimiento: $('ap-venc').value }), 'ap-msg');
     formAdmin('form-admin-evento', '/api/admin/calendario', () => ({ titulo: $('ae-titulo').value, fecha: $('ae-fecha').value, tipo: $('ae-tipo').value }), 'ae-msg', cargarCalendario);
-    formAdmin('form-admin-materia', '/api/admin/materias', () => ({ nombre: $('am-nombre').value, descripcion: $('am-desc').value, anio_cursada: $('am-anio').value, docente_id: $('am-docente').value || null, color: $('am-color').value }), 'am-msg');
+    $('form-admin-materia')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const cuerpoM = { nombre: $('am-nombre').value, descripcion: $('am-desc').value, anio_cursada: $('am-anio').value, docente_id: $('am-docente').value || null, color: $('am-color').value };
+        try {
+            if (editMateriaId) await api(`/api/admin/materias/${editMateriaId}`, { method: 'PUT', body: cuerpoM });
+            else await api('/api/admin/materias', { method: 'POST', body: cuerpoM });
+            msg('am-msg', editMateriaId ? 'Materia actualizada.' : 'Materia guardada.', true);
+            editMateriaId = null; $('form-admin-materia').reset();
+            await cargarAdminDatos(); cargarGestion(); cargarTodoDelAlumno();
+        } catch (x) { msg('am-msg', x.message, false); }
+    });
     formAdmin('form-admin-docente', '/api/admin/docentes', () => ({ nombre: $('ad-nombre').value }), 'ad-msg');
     formAdmin('form-admin-horario', '/api/admin/horarios', () => ({ materia_id: $('ah-materia').value, dia_semana: $('ah-dia').value, hora_inicio: $('ah-ini').value, hora_fin: $('ah-fin').value, aula: $('ah-aula').value, docente_id: $('ah-docente').value || null }), 'ah-msg');
     formAdmin('form-admin-periodo', '/api/admin/periodos', () => ({ ciclo: $('apd-ciclo').value, nombre: $('apd-nombre').value, orden: $('apd-orden').value, fecha_inicio: $('apd-ini').value, fecha_fin: $('apd-fin').value }), 'apd-msg');
@@ -440,6 +470,149 @@ document.addEventListener("DOMContentLoaded", async () => {
     $('admin-eventos')?.addEventListener('click', async e => {
         const b = e.target.closest('.btn-borrar-evento'); if (!b) return;
         await api(`/api/admin/calendario/${b.dataset.id}`, { method: 'DELETE' }); cargarAdminDatos(); cargarCalendario();
+    });
+
+
+    // ---------- Mostrar / ocultar contraseña ----------
+    document.addEventListener('click', e => {
+        const b = e.target.closest('.btn-ver-clave');
+        if (!b) return;
+        const inp = b.parentElement.querySelector('input');
+        const oculto = inp.type === 'password';
+        inp.type = oculto ? 'text' : 'password';
+        b.firstElementChild.className = oculto ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+    });
+
+    // ---------- Restablecer contraseña de un usuario ----------
+    $('form-reset-clave')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        $('rc-error').textContent = '';
+        try {
+            await api(`/api/admin/usuarios/${resetId}/password`, { method: 'POST', body: { password: $('rc-pass').value, forzar_cambio: $('rc-forzar').checked } });
+            $('form-reset-clave').reset();
+            modal('modalResetClave').hide();
+            msg('au-msg', 'Contraseña restablecida.', true);
+        } catch (x) { $('rc-error').textContent = x.message; }
+    });
+
+    // ---------- Datos completos del alumno ----------
+    async function cargarPanelesAdmin() {
+        const als = await api('/api/alumnos');
+        const op = als.map(a => `<option value="${Number(a.id)}">${esc(a.apellido)}, ${esc(a.nombre)}</option>`).join('');
+        const actual = $('ada-alumno').value, filtro = $('an2-filtro').value;
+        $('ada-alumno').innerHTML = '<option value="">Elegí un alumno…</option>' + op; $('ada-alumno').value = actual;
+        $('an2-filtro').innerHTML = '<option value="">Todos los alumnos</option>' + op; $('an2-filtro').value = filtro;
+        cargarHistorialNotas(); cargarGestion();
+    }
+    async function cargarAlumnoAdmin() {
+        const id = $('ada-alumno').value;
+        $('form-admin-alumno').classList.toggle('d-none', !id);
+        if (!id) return;
+        const d = await api(`/api/admin/alumnos/${id}`);
+        const a = d.alumno;
+        $('ada-dni').value = a.dni || ''; $('ada-nac').value = a.fecha_nacimiento || ''; $('ada-anio').value = a.anio_cursada;
+        $('ada-div').value = a.division || ''; $('ada-ing').value = a.anio_ingreso || ''; $('ada-tel').value = a.telefono || '';
+        $('ada-dom').value = a.domicilio || ''; $('ada-loc').value = a.localidad || '';
+        $('ada-materias').innerHTML = d.materias.length ? d.materias.map(m =>
+            `<div class="form-check"><input class="form-check-input ada-mat" id="adamat-${Number(m.id)}" type="checkbox" value="${Number(m.id)}" ${d.inscriptas.includes(m.id) ? 'checked' : ''} /><label class="form-check-label" for="adamat-${Number(m.id)}">${esc(m.nombre)} (${Number(m.anio_cursada)}°)</label></div>`).join('')
+            : '<span class="text-body-secondary">No hay materias cargadas.</span>';
+        $('ada-msg').textContent = '';
+    }
+    $('ada-alumno')?.addEventListener('change', cargarAlumnoAdmin);
+    $('form-admin-alumno')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        try {
+            await api(`/api/admin/alumnos/${$('ada-alumno').value}`, { method: 'PUT', body: {
+                dni: $('ada-dni').value, fecha_nacimiento: $('ada-nac').value, anio_cursada: $('ada-anio').value, division: $('ada-div').value,
+                anio_ingreso: $('ada-ing').value, telefono: $('ada-tel').value, domicilio: $('ada-dom').value, localidad: $('ada-loc').value,
+                materias: [...document.querySelectorAll('.ada-mat:checked')].map(c => Number(c.value)) } });
+            msg('ada-msg', 'Datos guardados.', true);
+            await cargarOpcionesNota(); cargarTodoDelAlumno();
+        } catch (x) { msg('ada-msg', x.message, false); }
+    });
+
+    // ---------- Historial de notas ----------
+    async function cargarHistorialNotas() {
+        const f = $('an2-filtro').value;
+        try {
+            const ns = await api('/api/admin/notas' + (f ? `?alumno=${f}` : ''));
+            $('admin-notas').innerHTML = ns.length ? ns.map(n =>
+                `<tr><td>${esc(n.apellido)}, ${esc(n.nombre)}</td><td>${esc(n.materia)}</td><td>${esc(n.periodo)} ${Number(n.ciclo)}</td>
+                 <td><input aria-label="Nota" class="form-control form-control-sm nota-input" max="10" min="0" step="0.01" type="number" value="${esc(n.valor)}" /></td>
+                 <td class="text-nowrap"><button class="btn btn-sm btn-outline-primary btn-nota-guardar" data-id="${Number(n.id)}" type="button">Guardar</button> <button class="btn btn-sm btn-outline-danger btn-nota-borrar" data-id="${Number(n.id)}" type="button">Borrar</button></td></tr>`).join('')
+                : '<tr><td colspan="5" class="text-body-secondary">Sin notas cargadas.</td></tr>';
+        } catch (e) { /* sin datos */ }
+    }
+    $('an2-filtro')?.addEventListener('change', cargarHistorialNotas);
+    $('admin-notas')?.addEventListener('click', async e => {
+        const g = e.target.closest('.btn-nota-guardar'), b = e.target.closest('.btn-nota-borrar');
+        if (!g && !b) return;
+        try {
+            if (g) {
+                const v = g.closest('tr').querySelector('.nota-input').value;
+                await api(`/api/admin/notas/${g.dataset.id}`, { method: 'PUT', body: { valor: v } });
+                msg('an2-msg', 'Nota actualizada.', true);
+            } else {
+                if (!confirm('¿Borrar esta nota?')) return;
+                await api(`/api/admin/notas/${b.dataset.id}`, { method: 'DELETE' });
+                msg('an2-msg', 'Nota borrada.', true);
+            }
+            cargarHistorialNotas(); cargarNotas();
+        } catch (x) { msg('an2-msg', x.message, false); }
+    });
+
+    // ---------- Gestión de registros (editar / borrar) ----------
+    let editComunicadoId = null, editMateriaId = null, gestionFilas = [];
+    const ARS = v => Number(v).toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
+    const GESTION = {
+        comunicados: { url: '/api/comunicados', borrar: '/api/admin/comunicados/', cols: ['Título', 'Fecha', 'Importante'], editar: true,
+            fila: c => [c.titulo, fechaLocal(c.publicado_en), c.importante ? 'Sí' : 'No'] },
+        pagos: { url: '/api/admin/pagos?todos=1', borrar: '/api/admin/pagos/', cols: ['Alumno', 'Concepto', 'Monto', 'Vence', 'Estado'],
+            fila: p => [`${p.apellido}, ${p.nombre}`, p.concepto, ARS(p.monto), fechaLocal(p.vencimiento), p.estado === 'pagado' ? 'Pagada' : 'Pendiente'] },
+        asistencias: { url: '/api/admin/asistencias', borrar: '/api/admin/asistencias/', cols: ['Alumno', 'Fecha', 'Materia', 'Estado', 'Justificada'],
+            fila: a => [`${a.apellido}, ${a.nombre}`, fechaLocal(a.fecha), a.materia || '-', a.estado, a.justificada ? 'Sí' : 'No'] },
+        materias: { url: '/api/admin/materias', borrar: '/api/admin/materias/', cols: ['Materia', 'Año', 'Docente'], editar: true,
+            aviso: 'Al borrar una materia también se borran sus notas, horarios e inscripciones.',
+            fila: m => [m.nombre, `${m.anio_cursada}°`, m.docente || '-'] },
+        horarios: { url: '/api/admin/horarios', borrar: '/api/admin/horarios/', cols: ['Día', 'Horario', 'Materia', 'Docente'],
+            fila: h => [DIAS[h.dia_semana], `${hhmm(h.hora_inicio)} - ${hhmm(h.hora_fin)}`, h.materia, h.docente || '-'] },
+        docentes: { url: '/api/admin/docentes', borrar: '/api/admin/docentes/', cols: ['Docente'], fila: d => [d.nombre] }
+    };
+    async function cargarGestion() {
+        const tipo = $('ag-tipo')?.value, cfg = GESTION[tipo];
+        if (!cfg) return;
+        try {
+            gestionFilas = await api(cfg.url);
+            $('ag-thead').innerHTML = `<tr>${cfg.cols.map(c => `<th>${esc(c)}</th>`).join('')}<th></th></tr>`;
+            $('ag-tbody').innerHTML = gestionFilas.length ? gestionFilas.map(r =>
+                `<tr>${cfg.fila(r).map(c => `<td>${esc(c)}</td>`).join('')}<td class="text-nowrap">${cfg.editar ? `<button class="btn btn-sm btn-outline-primary btn-ag-editar" data-id="${Number(r.id)}" type="button">Editar</button> ` : ''}<button class="btn btn-sm btn-outline-danger btn-ag-borrar" data-id="${Number(r.id)}" type="button">Borrar</button></td></tr>`).join('')
+                : `<tr><td colspan="${cfg.cols.length + 1}" class="text-body-secondary">Sin registros.</td></tr>`;
+        } catch (e) { /* sin datos */ }
+    }
+    $('ag-tipo')?.addEventListener('change', cargarGestion);
+    $('ag-tbody')?.addEventListener('click', async e => {
+        const tipo = $('ag-tipo').value, cfg = GESTION[tipo];
+        const ed = e.target.closest('.btn-ag-editar'), bo = e.target.closest('.btn-ag-borrar');
+        if (!ed && !bo) return;
+        try {
+            if (bo) {
+                if (!confirm('¿Borrar este registro?' + (cfg.aviso ? '\n' + cfg.aviso : ''))) return;
+                await api(cfg.borrar + bo.dataset.id, { method: 'DELETE' });
+                msg('ag-msg', 'Registro borrado.', true);
+                cargarGestion(); cargarAdminDatos(); cargarComunicados(); cargarCalendario(); cargarTodoDelAlumno(); cargarHistorialNotas();
+            } else {
+                const r = gestionFilas.find(x => x.id === Number(ed.dataset.id));
+                if (!r) return;
+                if (tipo === 'comunicados') {
+                    editComunicadoId = r.id; $('ac-titulo').value = r.titulo; $('ac-cuerpo').value = r.cuerpo; $('ac-importante').checked = !!r.importante;
+                    msg('ac-msg', 'Editando comunicado: modificá y apretá Publicar.', true); $('ac-titulo').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else if (tipo === 'materias') {
+                    editMateriaId = r.id; $('am-nombre').value = r.nombre; $('am-desc').value = r.descripcion || ''; $('am-anio').value = r.anio_cursada;
+                    $('am-docente').value = r.docente_id || ''; $('am-color').value = r.color;
+                    msg('am-msg', 'Editando materia: modificá y apretá Guardar.', true); $('am-nombre').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        } catch (x) { msg('ag-msg', x.message, false); }
     });
 
     // ---------- Arranque ----------

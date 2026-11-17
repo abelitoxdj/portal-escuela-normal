@@ -28,10 +28,23 @@ async function cargar(email) {
   return { w, d: w.document, errores };
 }
 
+const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'portal.css'), 'utf8');
 const fallas = []; const t = (n, c) => { console.log(c ? '  OK   ' : '  FALLA', n); if (!c) fallas.push(n); };
 (async () => {
+  t('CSS: ninguna regla oculta permanentemente las secciones (seccion-oculta)', !/\.seccion-oculta\s*\{[^}]*display\s*:\s*none/.test(css));
+  // Datos completos del alumno 1 cargados por el administrador (para ver el perfil completo)
+  {
+    const ck0 = await sesion('admin@demo.invalid'); const tk0 = (await (await fetch(BASE + '/api/auth/csrf', { headers: { Cookie: ck0 } })).json()).token;
+    const hd = { 'Content-Type': 'application/json', Cookie: ck0, 'X-CSRF-Token': tk0 };
+    const lista = await (await fetch(BASE + '/api/alumnos', { headers: { Cookie: ck0 } })).json();
+    const a1 = lista.find(a => a.nombre.includes('Uno')); const det = await (await fetch(BASE + `/api/admin/alumnos/${a1.id}`, { headers: { Cookie: ck0 } })).json();
+    await fetch(BASE + `/api/admin/alumnos/${a1.id}`, { method: 'PUT', headers: hd, body: JSON.stringify({ dni: '38123456', fecha_nacimiento: '2002-08-20', anio_cursada: 2, division: 'A', anio_ingreso: 2025, domicilio: 'Av. Siempre Viva 742', localidad: 'San Miguel de Tucumán', telefono: '381 123-4567', materias: det.inscriptas }) });
+  }
   let { w, d, errores } = await cargar('alumno1@demo.invalid');
   t('Sin errores de JavaScript al cargar', errores.length === 0);
+  t('Perfil muestra DNI, nacimiento, domicilio y teléfono', /DNI/.test(d.getElementById('perfil-datos').textContent) && /38123456/.test(d.getElementById('perfil-datos').textContent) && /20\/08\/2002/.test(d.getElementById('perfil-datos').textContent) && /Siempre Viva/.test(d.getElementById('perfil-datos').textContent));
+  t('Cambiar contraseña: 3 botones de ojo (mostrar/ocultar)', d.querySelectorAll('#modalPassword .btn-ver-clave').length === 3);
+  { const i = d.getElementById('pw-nueva'); const btn = d.querySelectorAll('#modalPassword .btn-ver-clave')[1]; btn.click(); t('Ojo: la clave pasa a texto', i.type === 'text'); btn.click(); t('Ojo: vuelve a oculta', i.type === 'password'); }
   t('Sidebar muestra nombre del usuario', d.getElementById('side-nombre').textContent.includes('Alumno Uno'));
   t('Perfil renderizado desde la BD (nombre, año)', /Alumno Uno/.test(d.getElementById('perfil-datos').textContent) && /2° Año/.test(d.getElementById('perfil-datos').textContent));
   t('5 materias renderizadas con docente', d.querySelectorAll('.materia-item').length >= 5);
@@ -73,6 +86,13 @@ const fallas = []; const t = (n, c) => { console.log(c ? '  OK   ' : '  FALLA', 
   t('Admin: selectores de asistencia/pago/horario cargados desde la BD', x.d.getElementById('aa-alumno').options.length >= 2 && x.d.getElementById('ah-materia').options.length >= 5 && x.d.getElementById('ah-docente').options.length >= 6);
   t('Admin: calendario y cuotas pendientes listados', x.d.querySelectorAll('#admin-eventos li').length >= 1 && x.d.querySelectorAll('#admin-pagos tr').length >= 1);
   t('Admin: sin errores de JavaScript', x.errores.length === 0);
+  t('Admin: paneles de datos del alumno, historial y gestión presentes', !!x.d.getElementById('form-admin-alumno') && x.d.getElementById('ada-alumno').options.length >= 3 && x.d.getElementById('an2-filtro').options.length >= 3);
+  t('Admin: historial de notas con filas editables', x.d.querySelectorAll('#admin-notas .nota-input').length >= 10);
+  t('Admin: gestión lista comunicados con Editar y Borrar', x.d.querySelectorAll('#ag-tbody .btn-ag-borrar').length >= 1 && x.d.querySelectorAll('#ag-tbody .btn-ag-editar').length >= 1);
+  t('Admin: botón Nueva clave por usuario', x.d.querySelectorAll('#admin-usuarios .btn-reset').length >= 4);
+  t('Admin: modal restablecer clave con ojo', x.d.querySelectorAll('#modalResetClave .btn-ver-clave').length === 1 && x.d.querySelectorAll('#form-admin-usuario .btn-ver-clave').length === 1);
+  x.d.getElementById('ag-tipo').value = 'materias'; x.d.getElementById('ag-tipo').dispatchEvent(new x.w.Event('change')); await new Promise(r => setTimeout(r, 800));
+  t('Admin: cambiar a Materias recarga la tabla de gestión', x.d.querySelectorAll('#ag-tbody tr').length >= 5 && /Materia/.test(x.d.getElementById('ag-thead').textContent));
   t('Admin: tabla de usuarios cargada', x.d.querySelectorAll('#admin-usuarios tr').length >= 4);
 
   const tu = await cargar('tutor1@demo.invalid');
